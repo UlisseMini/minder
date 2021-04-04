@@ -13,7 +13,7 @@ EXPIRES_DELTA = timedelta(minutes=15)
 
 
 # relative url, so if our api is foo.bar/api/v1 token would be at foo.bar/api/v1/token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="./token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="./login")
 
 users_db = {
     'john': {
@@ -110,7 +110,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
 
 
 
-@app.post("/token", response_model=Token)
+@app.post("/login", response_model=Token)
+# TODO: What does empty Depends() do?
 async def login(form_data: OAuth2PasswordRequestForm = Depends()):
     incorrect_auth_exception = HTTPException(
         status_code=400,
@@ -127,6 +128,19 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
     return {"access_token": access_token, "token_type": "bearer"}
 
+
+@app.post("/register")
+async def register(form_data: OAuth2PasswordRequestForm = Depends()):
+    if form_data.username in users_db:
+        raise HTTPException(status_code=400, detail="User exists")
+
+    users_db[form_data.username] = dict(
+        username=form_data.username,
+        email='unknown@null.com', # TODO: add emails
+        hashed_password=get_password_hash(form_data.password),
+    )
+
+    return {"status": "ok", "text": "account created"}
 
 # if response_model is not declared then UserInDB is returned, along with hashed_password!
 @app.get('/users/me', response_model=User)
