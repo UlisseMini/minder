@@ -37,6 +37,10 @@ def get_user(username):
         return UserInDB(**user_dict)
 
 
+def add_user(user: UserInDB):
+    users_db[user.username] = user.dict()
+
+
 # auth needs get_user in scope
 from auth import *
 
@@ -57,13 +61,14 @@ async def register(form_data: OAuth2PasswordRequestForm = Depends()):
     if form_data.username in users_db:
         raise HTTPException(status_code=400, detail="User exists")
 
-    users_db[form_data.username] = dict(
+    user = UserInDB(
         username=form_data.username,
         email='unknown@null.com', # TODO: add emails
         hashed_password=get_password_hash(form_data.password),
     )
+    add_user(user)
 
-    access_token = create_access_token(data={"sub": form_data.username})
+    access_token = create_access_token(data={"sub": user.username})
 
     return {"access_token": access_token, "token_type": "bearer"}
 
