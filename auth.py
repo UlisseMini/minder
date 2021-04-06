@@ -58,9 +58,9 @@ def get_password_hash(password):
 def authenticate_user(db, username: str, password: str):
     user = crud.get_user_by_sub(db, username)
     if not user:
-        return False
+        raise IncorrectAuthException
     if not verify_password(password, user.hashed_password):
-        return False
+        raise IncorrectAuthException
     return user
 
 
