@@ -46,8 +46,6 @@ class TokenData(BaseModel):
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def verify_password(plain_password, hashed_password):
-    print('plain: "%s"' % plain_password)
-    print('hashed: "%s"' % hashed_password)
     return pwd_context.verify(plain_password, hashed_password)
 
 
