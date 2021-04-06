@@ -3,7 +3,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from jose import JWTError, jwt
 
-from fastapi import status, HTTPException, Depends
+from fastapi import status, HTTPException, Depends, Request
 from fastapi.security import OAuth2PasswordBearer
 
 from dotenv import load_dotenv
@@ -21,11 +21,8 @@ EXPIRES_DELTA = timedelta(minutes=15)
 # relative url, so if our api is foo.bar/api/v1 token would be at foo.bar/api/v1/token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="./login")
 
-CredentialsException = HTTPException(
-    status_code=status.HTTP_401_UNAUTHORIZED,
-    detail="Could not validate credentials",
-    headers={"WWW-Authenticate": "Bearer"},
-)
+class CredentialsException(Exception):
+    pass
 
 IncorrectAuthException = HTTPException(
     status_code=400,
@@ -70,7 +67,14 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-def get_current_user(db = Depends(get_db), token: str = Depends(oauth2_scheme)):
+def get_token(request: Request):
+    if token := request.cookies.get('access_token'):
+        return token
+    else:
+        raise CredentialsException
+
+
+def get_current_user(db = Depends(get_db), token: str = Depends(get_token)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         sub = payload.get("sub")

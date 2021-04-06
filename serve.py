@@ -1,26 +1,73 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request, Response
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
+
 import crud
 import models, schemas
 from database import engine, get_db
-from auth import Token, get_current_user, get_password_hash, authenticate_user, create_access_token
+from auth import Token, get_current_user, get_password_hash, authenticate_user, create_access_token, CredentialsException
 
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-@app.post("/login", response_model=Token)
-def login(form_data: OAuth2PasswordRequestForm = Depends(), db = Depends(get_db)):
-    user = authenticate_user(db, form_data.username, form_data.password)
+templates = Jinja2Templates(directory="templates")
 
+@app.exception_handler(CredentialsException)
+def exception_handler(request: Request, exc: CredentialsException) -> Response:
+    return RedirectResponse(url='/login')
+
+
+@app.get("/", response_class=HTMLResponse)
+def index(request: Request, user = Depends(get_current_user)):
+    return templates.TemplateResponse('home.html', {
+        'user': user,
+        'request': request,
+    })
+
+
+@app.get("/login", response_class=HTMLResponse)
+def get_login(request: Request):
+    return templates.TemplateResponse('login.html', {
+        'request': request,
+    })
+
+
+@app.get("/register")
+def get_register(request: Request):
+    return templates.TemplateResponse('register.html', {
+        'request': request,
+    })
+
+
+# called after user's successful login, set cookie and redirect to /
+def logged_in_response(user):
     access_token = create_access_token(data={"sub": user.username})
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    # Status code 302_FOUND makes our POST into a GET
+    response = RedirectResponse("/", status_code=302)
+    response.set_cookie("access_token", access_token)
+    return response
+
+
+@app.post("/login")
+def post_login(form_data: OAuth2PasswordRequestForm = Depends(), db = Depends(get_db)):
+    user = authenticate_user(db, form_data.username, form_data.password)
+
+    return logged_in_response(user)
+
+
+@app.post("/logout")
+async def logout():
+    response = RedirectResponse("/", status_code=302)
+    response.set_cookie("access_token", "logged_out")
+    return response
 
 
 @app.post("/register", response_model=Token)
-def register(form_data: OAuth2PasswordRequestForm = Depends(), db = Depends(get_db)):
+def post_register(form_data: OAuth2PasswordRequestForm = Depends(), db = Depends(get_db)):
     if crud.get_user_by_sub(db, form_data.username):
         raise HTTPException(status_code=400, detail="User exists")
 
@@ -30,15 +77,7 @@ def register(form_data: OAuth2PasswordRequestForm = Depends(), db = Depends(get_
     )
     crud.add_user(db, user)
 
-    access_token = create_access_token(data={"sub": user.username})
-
-    return {"access_token": access_token, "token_type": "bearer"}
-
-
-# if response_model is not declared then UserInDB is returned, along with hashed_password!
-@app.get('/users/me', response_model=schemas.User)
-def read_users_me(current_user: schemas.User = Depends(get_current_user)):
-    return current_user
+    return logged_in_response(user)
 
 
 app.mount('/', StaticFiles(directory='public', html=True))

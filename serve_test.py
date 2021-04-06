@@ -10,10 +10,6 @@ def test_register_login():
     resp = client.post("/login", data=auth)
     assert resp.status_code == 400
 
-    # USERS FAIL
-    resp = client.get('/users/me')
-    assert resp.status_code == 401
-
     # REGISTER
     resp = client.post("/register", data=auth)
     assert resp.status_code == 200
