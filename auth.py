@@ -9,8 +9,10 @@ from fastapi.security import OAuth2PasswordBearer
 from dotenv import load_dotenv
 load_dotenv()
 
+import crud
+from database import get_db
+
 import os
-from serve import get_user
 
 SECRET_KEY = os.environ['SECRET_KEY']
 ALGORITHM = 'HS256'
@@ -44,6 +46,8 @@ class TokenData(BaseModel):
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 def verify_password(plain_password, hashed_password):
+    print('plain: "%s"' % plain_password)
+    print('hashed: "%s"' % hashed_password)
     return pwd_context.verify(plain_password, hashed_password)
 
 
@@ -51,8 +55,8 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 
-def authenticate_user(username: str, password: str):
-    user = get_user(username)
+def authenticate_user(db, username: str, password: str):
+    user = crud.get_user_by_sub(db, username)
     if not user:
         return False
     if not verify_password(password, user.hashed_password):
@@ -68,7 +72,7 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-async def get_current_user(token: str = Depends(oauth2_scheme)):
+def get_current_user(db = Depends(get_db), token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         sub = payload.get("sub")
@@ -78,7 +82,7 @@ async def get_current_user(token: str = Depends(oauth2_scheme)):
         raise CredentialsException
 
     # subject is usually username or email, user identification in oauth2.
-    user = get_user(sub)
+    user = crud.get_user_by_sub(db, sub)
     if not user:
         return CredentialsException
 

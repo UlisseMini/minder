@@ -1,53 +1,18 @@
 from fastapi import FastAPI, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
-from typing import Optional
-from pydantic import BaseModel
+import crud
+import models, schemas
+from database import SessionLocal, engine, get_db
+from auth import * # FIXME
 
-users_db = {
-    'john': {
-        'username': 'john',
-        'hashed_password': r'$2b$12$KuBfNGGZ3Uac6RNITnI6OefXOaQFo6q6FVrtzXN3XI/wdWYvUxHCS',
-        'email': 'john@heyyyyyyyyy.com',
-    },
-
-    'alice': {
-        'username': 'alice',
-        'hashed_password': r'$2b$12$zxT4rQpUQNx3.07I42rAouulPCBM8eIfJy7Z1OWwWj60Q/s1ex.s2',
-        'email': 'alice@bobross.com',
-    }
-}
-
+models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-class User(BaseModel):
-    username: str
-    email: Optional[str] = None
-
-
-class UserInDB(User):
-    hashed_password: str
-
-
-def get_user(username):
-    if username in users_db:
-        user_dict = users_db[username]
-        # This can return any object, auth doesn't care!
-        return UserInDB(**user_dict)
-
-
-def add_user(user: UserInDB):
-    users_db[user.username] = user.dict()
-
-
-# auth needs get_user in scope
-from auth import *
-
-
 @app.post("/login", response_model=Token)
-async def login(form_data: OAuth2PasswordRequestForm = Depends()):
-    user = authenticate_user(form_data.username, form_data.password)
+def login(form_data: OAuth2PasswordRequestForm = Depends(), db = Depends(get_db)):
+    user = authenticate_user(db, form_data.username, form_data.password)
     if not user:
         raise IncorrectAuthException
 
@@ -57,16 +22,15 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 @app.post("/register")
-async def register(form_data: OAuth2PasswordRequestForm = Depends()):
-    if form_data.username in users_db:
+def register(form_data: OAuth2PasswordRequestForm = Depends(), db = Depends(get_db)):
+    if crud.get_user_by_sub(db, form_data.username):
         raise HTTPException(status_code=400, detail="User exists")
 
-    user = UserInDB(
+    user = schemas.UserCreate(
         username=form_data.username,
-        email='unknown@null.com', # TODO: add emails
-        hashed_password=get_password_hash(form_data.password),
+        password=form_data.password,
     )
-    add_user(user)
+    crud.add_user(db, user)
 
     access_token = create_access_token(data={"sub": user.username})
 
@@ -74,8 +38,8 @@ async def register(form_data: OAuth2PasswordRequestForm = Depends()):
 
 
 # if response_model is not declared then UserInDB is returned, along with hashed_password!
-@app.get('/users/me', response_model=User)
-async def read_users_me(current_user: User = Depends(get_current_user)):
+@app.get('/users/me', response_model=schemas.User)
+def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
 
