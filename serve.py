@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Depends, HTTPException, Request, Response
+from fastapi import FastAPI, Depends, HTTPException, Request, Response, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
@@ -52,6 +52,7 @@ def logged_in_response(user):
     return response
 
 
+
 @app.post("/login")
 def post_login(form_data: OAuth2PasswordRequestForm = Depends(), db = Depends(get_db)):
     user = authenticate_user(db, form_data.username, form_data.password)
@@ -78,6 +79,18 @@ def post_register(form_data: OAuth2PasswordRequestForm = Depends(), db = Depends
     crud.add_user(db, user)
 
     return logged_in_response(user)
+
+
+@app.post("/userinfo")
+def userinfo_post(
+        bio: str = Form(...),
+        user = Depends(get_current_user),
+        db = Depends(get_db)):
+
+    user.bio = bio
+    db.commit()
+
+    return RedirectResponse("/", status_code=302)
 
 
 app.mount('/', StaticFiles(directory='public', html=True))
