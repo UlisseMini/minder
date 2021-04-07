@@ -3,7 +3,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from jose import JWTError, jwt
 
-from fastapi import HTTPException, Depends, Request
+from fastapi import HTTPException, Depends
 from fastapi.security import OAuth2PasswordBearer
 
 from dotenv import load_dotenv
@@ -67,14 +67,7 @@ def create_access_token(data: dict):
     return encoded_jwt
 
 
-def get_token(request: Request):
-    if token := request.cookies.get('access_token'):
-        return token
-    else:
-        raise CredentialsException
-
-
-def get_current_user(db = Depends(get_db), token: str = Depends(get_token)):
+def get_current_user(db = Depends(get_db), token: str = Depends(oauth2_scheme)):
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         sub = payload.get("sub")
