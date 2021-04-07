@@ -13,15 +13,14 @@ class User(Base):
     hashed_password = Column(String)
     bio = Column(String)
 
-    problems = relationship("Problem", back_populates="owner")
+    problems = relationship("Problem", back_populates="author")
 
 
-
-class Problems(Base):
+class Problem(Base):
     __tablename__ = "problems"
 
     id = Column(Integer, primary_key=True)
     tex = Column(String)
     author_id = Column(Integer, ForeignKey("users.id"))
 
-    owner = relationship("User", back_populates="problems")
+    author = relationship("User", back_populates="problems")
