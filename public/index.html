@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>minder</title>
+  <link rel="stylesheet" href="/styles.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <script defer src="/main.js"></script>
+</head>
+
+<body>
+  <noscript>You must enable javascript to use this app!</noscript>
+
+  <div id="home" class="hidden">
+    <p>Welcome user!</p>
+
+    <form id="logout-form"><input type="submit" value="Logout"></form>
+  </div>
+
+  <div id="login" class="hidden">
+    <form id="login-form">
+      <input type="text" name="username" placeholder="username"><br>
+      <input type="password" name="password" placeholder="password"><br>
+      <input type="submit" value="Login">
+    </form>
+    <p>Don't have an account? <a href="#register">register</a></p>
+  </div>
+
+  <div id="register" class="hidden">
+    <form id="register-form">
+      <input type="text" name="username" placeholder="username"><br>
+      <input type="password" name="password" placeholder="password"><br>
+      <input type="submit" value="Register">
+    </form>
+    <p>Have an account? <a href="#login">login</a></p>
+  </div>
+</body>
+
+</html>
