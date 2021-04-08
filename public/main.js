@@ -1,15 +1,4 @@
 function $(x) {return document.getElementById(x)}
-function h(tag, attrs, children) {
-  const el = document.createElement(tag)
-  if (attrs) {
-    for (let attr in attrs) {el.setAttribute(attr, attrs[attr])}
-  }
-  if (children) {
-    children.forEach(child => el.append(child))
-  }
-
-  return el
-}
 
 // Raising an exception and alerting might be better
 // If I'm going this route I should use sentry tbh
