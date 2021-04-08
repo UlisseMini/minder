@@ -37,7 +37,7 @@ def test_register_login():
 
     # /api/bio test updating bio
     bio = "I love apples"
-    resp = client.post(f'/api/bio?bio={bio}', headers=headers)
+    resp = client.post(f'/api/bio', headers=headers, json={'bio': bio})
     assert resp.status_code == 200
 
     resp = client.get('/api/profile', headers=headers)

@@ -45,9 +45,9 @@ def profile(user = Depends(get_current_user)):
 
 
 @api.post("/bio")
-def bio(bio: str, user = Depends(get_current_user), db = Depends(get_db)):
+def bio(data: schemas.BioUpdate, user = Depends(get_current_user), db = Depends(get_db)):
     "Update bio"
-    user.bio = bio
+    user.bio = data.bio
     db.commit()
     return {'status': 'ok'}
 

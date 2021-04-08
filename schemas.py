@@ -9,6 +9,10 @@ class UserCreate(UserBase):
     hashed_password: str
 
 
+class BioUpdate(BaseModel):
+    bio: str
+
+
 class User(UserBase):
     "This schema is returned from our api endpoints"
 

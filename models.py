@@ -11,7 +11,7 @@ class User(Base):
     id = Column(Integer, primary_key=True)
     username = Column(String, unique=True, index=True)
     hashed_password = Column(String)
-    bio = Column(String)
+    bio = Column(String, default=lambda: '', nullable=False)
 
     problems = relationship("Problem", back_populates="author")
 

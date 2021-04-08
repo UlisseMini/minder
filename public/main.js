@@ -27,6 +27,25 @@ api.register = async (username, password) => {
   })
 }
 
+api.profile = async () => {
+  return await fetch("/api/profile", {
+    headers: {
+      "Authorization": `Bearer ${localStorage.access_token}`,
+    }
+  })
+}
+
+api.bio = async (bio) => {
+  return await fetch("/api/bio", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${localStorage.access_token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({bio: bio}),
+  })
+}
+
 const hookRegisterForm = () => {
   $("register-form").addEventListener("submit", async (e) => {
     if (e.preventDefault) e.preventDefault()
@@ -71,6 +90,26 @@ const hookLogoutForm = () => {
   })
 }
 
+const hookBioForm = () => {
+  $("bio-form").addEventListener("submit", async (e) => {
+    if (e.preventDefault) e.preventDefault()
+
+    e.target.save.value = "Saving"
+
+    const bio = e.target.bio.value
+    const resp = await api.bio(bio)
+    if (resp.status != 200) {
+      const json = await resp.json()
+      alert(json['detail'])
+    }
+
+    e.target.save.value = "Saved"
+    setTimeout(() => e.target.save.value = "Save", 1000)
+
+    return false
+  })
+}
+
 const onAccessToken = (access_token) => {
   if (typeof access_token != 'string') {
     alert(`access token isn't a string, got ${access_token}`)
@@ -95,6 +134,10 @@ const populateText = (text, data) => {
 const populate = (elem, data) => {
   elem.querySelectorAll("p, span, a, pre").forEach(child => {
     child.innerText = populateText(child.innerText, data)
+  })
+
+  elem.querySelectorAll("textarea").forEach(child => {
+    child.value = populateText(child.value, data)
   })
 }
 
@@ -122,9 +165,15 @@ const isLoggedIn = () => {
   return true
 }
 
-const onLoggedIn = () => {
-  const jwt = parseJWT(localStorage.access_token)
-  navigate('home', {username: jwt.sub})
+const onLoggedIn = async () => {
+  const resp = await api.profile()
+  if (resp.status != 200) {
+    alert(`status ${resp.status} from /api/profile`)
+    return
+  }
+  const profile = await resp.json()
+
+  navigate('home', {...profile})
 }
 
 const onLoggedOut = () => {
@@ -135,6 +184,7 @@ const contentLoaded = () => {
   hookLoginForm()
   hookRegisterForm()
   hookLogoutForm()
+  hookBioForm()
 
   if (isLoggedIn()) {
     onLoggedIn()
