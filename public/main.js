@@ -14,29 +14,25 @@ function h(tag, attrs, children) {
 const api = {}
 
 api.login = async (username, password) => {
-  const resp = await fetch("/api/login", {
+  return await fetch("/api/login", {
     method: "POST",
     body: new URLSearchParams({"username": username, "password": password})
   })
-
-  return await resp.json()
 }
 
 api.register = async (username, password) => {
-  const resp = await fetch("/api/register", {
+  return await fetch("/api/register", {
     method: "POST",
     body: new URLSearchParams({"username": username, "password": password})
   })
-
-  return await resp.json()
 }
 
 const hookRegisterForm = () => {
   $("register-form").addEventListener("submit", async (e) => {
     if (e.preventDefault) e.preventDefault()
 
-    const json = await api.register(e.target.username.value, e.target.password.value)
-    onAccessToken(json['access_token'])
+    const resp = await api.register(e.target.username.value, e.target.password.value)
+    await handleAuthResp(resp)
 
     return false
   })
@@ -46,34 +42,66 @@ const hookLoginForm = () => {
   $("login-form").addEventListener("submit", async (e) => {
     if (e.preventDefault) e.preventDefault()
 
-    const json = await api.login(e.target.username.value, e.target.password.value)
-    onAccessToken(json['access_token'])
+    const resp = await api.login(e.target.username.value, e.target.password.value)
+    await handleAuthResp(resp)
 
     return false
   })
 }
 
+// Used in common between login and register, since they both return an auth response.
+const handleAuthResp = async (resp) => {
+  const json = await resp.json()
+  if (resp.status != 200) {
+    alert(json['detail'])
+    return
+  }
+
+  onAccessToken(json['access_token'])
+}
+
 const hookLogoutForm = () => {
-  $("logout-form").addEventListener("submit", () => {
+  $("logout-form").addEventListener("submit", (e) => {
+    if (e.preventDefault) e.preventDefault()
+
     localStorage.removeItem("access_token")
     onLoggedOut()
+
+    return false
   })
 }
 
 const onAccessToken = (access_token) => {
   if (typeof access_token != 'string') {
     alert(`access token isn't a string, got ${access_token}`)
+    return
   }
 
   localStorage.setItem('access_token', access_token)
   if (!isLoggedIn()) {
     alert('obtained access token but isLoggedIn -> false')
+    return
   }
   onLoggedIn()
 }
 
+const populateText = (text, data) => {
+  for (let attr in data) {
+    text = text.replaceAll(`{${attr}}`, data[attr])
+  }
+  return text
+}
 
-const navigate = (page) => window.location.hash = '#' + page
+const populate = (elem, data) => {
+  elem.querySelectorAll("p, span, a, pre").forEach(child => {
+    child.innerText = populateText(child.innerText, data)
+  })
+}
+
+const navigate = (page, data) => {
+  if (data) {populate($(page), data)}
+  window.location.hash = '#' + page
+}
 
 const parseJWT = (token) => {
   try {
@@ -94,12 +122,11 @@ const isLoggedIn = () => {
   return true
 }
 
-// called when we are logged in
 const onLoggedIn = () => {
-  navigate('home')
+  const jwt = parseJWT(localStorage.access_token)
+  navigate('home', {username: jwt.sub})
 }
 
-// called when we are logged out
 const onLoggedOut = () => {
   navigate('login')
 }
