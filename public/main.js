@@ -11,6 +11,21 @@ function h(tag, attrs, children) {
   return el
 }
 
+// Raising an exception and alerting might be better
+// If I'm going this route I should use sentry tbh
+function crash(msg) {
+  console.error(msg)
+
+  if (typeof msg != 'string') {msg = JSON.stringify(msg, null, 2)}
+
+  document.body.innerHTML = `
+  <h1>An error has occured</h1>
+  <p>Please report this to <code>uli#4334</code> on discord, or <a href="https://github.com/UlisseMini/minder/issues">on github</a></p>
+  <p>Include a screenshot of the dev console and network tab if possible.</p>
+  <pre style="color: red;">${msg}</pre>
+  `
+}
+
 const api = {}
 
 api.login = async (username, password) => {
@@ -72,7 +87,12 @@ const hookLoginForm = () => {
 const handleAuthResp = async (resp) => {
   const json = await resp.json()
   if (resp.status != 200) {
-    alert(json['detail'])
+    if (resp.status == 400) {
+      // should be unknown user or pass
+      alert(json['detail'])
+    } else {
+      crash(json)
+    }
     return
   }
 
@@ -99,8 +119,15 @@ const hookBioForm = () => {
     const bio = e.target.bio.value
     const resp = await api.bio(bio)
     if (resp.status != 200) {
+      if (!isLoggedIn()) {
+        console.log("token expired")
+        e.target.save.value = "Save"
+        onLoggedOut()
+        return false
+      }
+
       const json = await resp.json()
-      alert(json['detail'])
+      crash({status: resp.status, json: json})
     }
 
     e.target.save.value = "Saved"
@@ -112,13 +139,13 @@ const hookBioForm = () => {
 
 const onAccessToken = (access_token) => {
   if (typeof access_token != 'string') {
-    alert(`access token isn't a string, got ${access_token}`)
+    crash(`access token isn't a string, got ${access_token}`)
     return
   }
 
   localStorage.setItem('access_token', access_token)
   if (!isLoggedIn()) {
-    alert('obtained access token but isLoggedIn -> false')
+    crash('obtained access token but isLoggedIn -> false')
     return
   }
   onLoggedIn()
@@ -168,7 +195,8 @@ const isLoggedIn = () => {
 const onLoggedIn = async () => {
   const resp = await api.profile()
   if (resp.status != 200) {
-    alert(`status ${resp.status} from /api/profile`)
+    const json = await resp.json()
+    crash({status: resp.status, json: json})
     return
   }
   const profile = await resp.json()
