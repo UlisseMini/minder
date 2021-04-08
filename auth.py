@@ -21,8 +21,11 @@ EXPIRES_DELTA = timedelta(minutes=15)
 # relative url, so if our api is foo.bar/api/v1 token would be at foo.bar/api/v1/token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="./login")
 
-class CredentialsException(Exception):
-    pass
+CredentialsException = HTTPException(
+    status_code=400,
+    detail="Invalid access token",
+    headers={"WWW-Authenticate": "Bearer"},
+)
 
 IncorrectAuthException = HTTPException(
     status_code=400,
