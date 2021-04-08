@@ -20,6 +20,7 @@ class Problem(Base):
     __tablename__ = "problems"
 
     id = Column(Integer, primary_key=True)
+    name = Column(String)
     tex = Column(String)
     author_id = Column(Integer, ForeignKey("users.id"))
 

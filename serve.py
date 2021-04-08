@@ -52,5 +52,17 @@ def bio(data: schemas.BioUpdate, user = Depends(get_current_user), db = Depends(
     return {'status': 'ok'}
 
 
+@api.post("/problem/add")
+def add_problem(problem: schemas.Problem, user = Depends(get_current_user), db = Depends(get_db)):
+    "Add a problem"
+    db_problem = models.Problem(**problem.dict(), author_id=user.id)
+    db.add(db_problem)
+    db.commit()
+    db.refresh(db_problem)
+
+    return problem
+
+
+
 app.include_router(api, prefix='/api')
 app.mount('/', StaticFiles(directory='public', html=True))

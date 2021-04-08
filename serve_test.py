@@ -43,3 +43,14 @@ def test_register_login():
     resp = client.get('/api/profile', headers=headers)
     assert resp.status_code == 200
     assert resp.json()['bio'] == bio
+
+    # api/problem/add
+    problem = {
+        'name': 'Riemann hypothesis',
+        'tex': '$2 + 2$',
+    }
+    resp = client.post('/api/problem/add', headers=headers, json=problem)
+    assert resp.status_code == 200
+    db_problem = resp.json()
+    assert problem == db_problem
+

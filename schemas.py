@@ -13,6 +13,11 @@ class BioUpdate(BaseModel):
     bio: str
 
 
+class Problem(BaseModel):
+    name: str
+    tex: str
+
+
 class User(UserBase):
     "This schema is returned from our api endpoints"
 
