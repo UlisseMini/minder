@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 
 class UserBase(BaseModel):
     username: str
@@ -22,6 +22,7 @@ class User(UserBase):
     "This schema is returned from our api endpoints"
 
     bio: Optional[str]
+    problems: List[Problem]
 
     class Config:
         # automatically try getattr when creating user from an object

@@ -162,6 +162,14 @@ const navigate = (page, data) => {
   window.location.hash = '#' + page
 }
 
+const template = (name, data) => {
+  const el = $(name + '-template').cloneNode(true)
+  el.classList.remove('hidden')
+  el.removeAttribute('id')
+  if (data) populate(el, data)
+  return el
+}
+
 const parseJWT = (token) => {
   try {
     return JSON.parse(atob(token.split('.')[1]))
@@ -189,6 +197,16 @@ const onLoggedIn = async () => {
     return
   }
   const profile = await resp.json()
+
+  // Render our problems
+  profile.problems = [
+    {name: 'yes', tex: '2+2'},
+    {name: 'no', tex: '3+3'}
+  ]
+  profile.problems.forEach(data => {
+    const el = template('problem', data)
+    $('my-problems').appendChild(el)
+  })
 
   navigate('home', {...profile})
 }

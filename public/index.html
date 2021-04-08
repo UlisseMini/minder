@@ -17,6 +17,16 @@
     <textarea name="bio" form="bio-form" placeholder="Edit bio">{bio}</textarea>
     <form id="bio-form"><input type="submit" value="Save" name="save"></form>
 
+    <div id="my-problems">
+    </div>
+
+    <!-- This is a template, JS uses cloneNode then removes hidden and id. -->
+    <div class="problem hidden" id="problem-template">
+      <p>{name}</p>
+      <!-- TODO: Render tex with renderToElement (katex) -->
+      <pre>{tex}</pre>
+    </div>
+
     <form id="logout-form"><input type="submit" value="Logout"></form>
   </div>
 
