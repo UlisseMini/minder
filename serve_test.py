@@ -44,12 +44,12 @@ def test_register_login():
     assert resp.status_code == 200
     assert resp.json()['bio'] == bio
 
-    # api/problem/add
+    # api/problems/add
     problem = {
         'name': 'Riemann hypothesis',
         'tex': '$2 + 2$',
     }
-    resp = client.post('/api/problem/add', headers=headers, json=problem)
+    resp = client.post('/api/problems/add', headers=headers, json=problem)
     assert resp.status_code == 200
     db_problem = resp.json()
     assert problem == db_problem
