@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 
 import crud
 import models, schemas
-from database import engine, get_db
+from database import engine, get_db, Session
 from auth import Token, get_current_user, get_password_hash, authenticate_user, create_access_token
 
 models.Base.metadata.create_all(bind=engine)
@@ -60,7 +60,28 @@ def add_problems(problem: schemas.Problem, user = Depends(get_current_user), db 
     db.commit()
     db.refresh(db_problem)
 
-    return problem
+    return db_problem
+
+
+@api.post("/problems/update")
+def update_problems(
+    id: int,
+    problem: schemas.Problem,
+    user: models.User = Depends(get_current_user),
+        db: Session = Depends(get_db)
+):
+    "Update problem 'id'"
+
+    db_problem = db.query(models.Problem).filter(models.Problem.id == id).first()
+    if db_problem.author_id != user.id:
+        raise HTTPException(status_code=403, detail="That isn't your problem")
+
+    db_problem.name = problem.name
+    db_problem.tex = problem.tex
+    db.commit()
+    db.refresh(db_problem)
+
+    return db_problem
 
 
 @api.get("/problems/get")
