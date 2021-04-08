@@ -54,3 +54,11 @@ def test_register_login():
     db_problem = resp.json()
     assert problem == db_problem
 
+    # check that the problem was added
+    resp = client.get('/api/problems/get', headers=headers)
+    assert resp.status_code == 200
+    print(resp.json())
+    assert len(resp.json()) == 1 # only one problem so far
+    for k in problem:
+        # there are extra fields like id and author_id, we don't care about those.
+        assert resp.json()[0][k] == problem[k]

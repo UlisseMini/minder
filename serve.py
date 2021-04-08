@@ -63,5 +63,11 @@ def add_problems(problem: schemas.Problem, user = Depends(get_current_user), db 
     return problem
 
 
+@api.get("/problems/get")
+def get_problems(_ = Depends(get_current_user), db = Depends(get_db)):
+    "Get problems, eventually these will be taylored for the logged in user"
+    return db.query(models.Problem).all()
+
+
 app.include_router(api, prefix='/api')
 app.mount('/', StaticFiles(directory='public', html=True))
