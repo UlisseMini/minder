@@ -205,10 +205,10 @@ const onLoggedIn = async () => {
     {name: 'yes', tex: '2+2'},
     {name: 'no', tex: '3+3'}
   ]
-  profile.problems.forEach(data => {
-    const el = template('problem', data)
-    $('my-problems').appendChild(el)
-  })
+
+  const children = profile.problems.map(data => template('problem', data))
+  $('my-problems').replaceChildren(...children)
+
 
   navigate('home', {...profile})
 }
