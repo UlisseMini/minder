@@ -19,7 +19,7 @@ ALGORITHM = 'HS256'
 EXPIRES_DELTA = timedelta(minutes=15)
 
 # relative url, so if our api is foo.bar/api/v1 token would be at foo.bar/api/v1/token
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="./login")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="./api/login")
 
 CredentialsException = HTTPException(
     status_code=400,
