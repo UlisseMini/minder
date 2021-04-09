@@ -140,35 +140,22 @@ const onAccessToken = (access_token) => {
   onLoggedIn()
 }
 
-const populateText = (text, data) => {
-  for (let attr in data) {
-    text = text.replaceAll(`{${attr}}`, data[attr])
-  }
-  return text
-}
-
-// FIXME: If you call this on elem it will wipe out the templating info, so
-// If called twice on #home the second time won't replace anything!
-const populate = (elem, data) => {
-  elem.querySelectorAll("p, span, a, pre").forEach(child => {
-    child.innerText = populateText(child.innerText, data)
-  })
-
-  elem.querySelectorAll("textarea").forEach(child => {
-    child.value = populateText(child.value, data)
-  })
-}
-
-const navigate = (page, data) => {
-  if (data) {populate($(page), data)}
+const navigate = (page) => {
   window.location.hash = '#' + page
 }
 
 const template = (name, data) => {
-  const el = $(name + '-template').cloneNode(true)
+  const id = name + '-template'
+  const el = $(id).cloneNode(true)
   el.classList.remove('hidden')
   el.removeAttribute('id')
-  if (data) populate(el, data)
+  if (data) {
+    let html = el.innerHTML
+    for (let attr in data) {
+      html = html.replaceAll(`{${attr}}`, data[attr])
+    }
+    el.innerHTML = html
+  }
   return el
 }
 
@@ -209,8 +196,10 @@ const onLoggedIn = async () => {
   const children = profile.problems.map(data => template('problem', data))
   $('my-problems').replaceChildren(...children)
 
+  $('bio-textarea').value = profile.bio
+  $('username-welcome').innerText = profile.username
 
-  navigate('home', {...profile})
+  navigate('home')
 }
 
 const onLoggedOut = () => {
