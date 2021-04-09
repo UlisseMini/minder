@@ -147,6 +147,8 @@ const populateText = (text, data) => {
   return text
 }
 
+// FIXME: If you call this on elem it will wipe out the templating info, so
+// If called twice on #home the second time won't replace anything!
 const populate = (elem, data) => {
   elem.querySelectorAll("p, span, a, pre").forEach(child => {
     child.innerText = populateText(child.innerText, data)
