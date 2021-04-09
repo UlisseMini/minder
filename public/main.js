@@ -2,6 +2,7 @@ function $(x) {return document.getElementById(x)}
 
 // Raising an exception and alerting might be better
 // If I'm going this route I should use sentry tbh
+// FIXME: Possible but unlikely/hard to exploit XSS
 function crash(msg) {
   console.error(msg)
 
@@ -150,6 +151,7 @@ const template = (name, data) => {
   el.classList.remove('hidden')
   el.removeAttribute('id')
   if (data) {
+    // FIXME: XSS
     let html = el.innerHTML
     for (let attr in data) {
       html = html.replaceAll(`{${attr}}`, data[attr])
