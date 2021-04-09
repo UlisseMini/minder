@@ -17,12 +17,18 @@ class Problem(BaseModel):
     name: str
     tex: str
 
+class ProblemDB(Problem):
+    id: int
+
+    class Config:
+        orm_mode = True
+
 
 class User(UserBase):
     "This schema is returned from our api endpoints"
 
     bio: Optional[str]
-    problems: List[Problem]
+    problems: List[ProblemDB]
 
     class Config:
         # automatically try getattr when creating user from an object
