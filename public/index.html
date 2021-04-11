@@ -12,22 +12,12 @@
   <noscript>You must enable javascript to use this app!</noscript>
 
   <div id="home" class="hidden">
-    <!-- NOTE: The {username} and {bio} templates aren't used, I was having issues with
-      Overwriting when you login to a different account. I could fix this, but then my
-      templating engine becomes more complicated then my business logic :P -->
-    <p>Welcome <span id="username-welcome">{username}</span>!</p>
+    <p>Welcome {username}!</p>
 
-    <textarea name="bio" form="bio-form" placeholder="Edit bio" id="bio-textarea">{bio}</textarea>
+    <textarea name="bio" form="bio-form" placeholder="Edit bio">{bio}</textarea>
     <form id="bio-form"><input type="submit" value="Save" name="save"></form>
 
     <div id="my-problems">
-    </div>
-
-    <!-- This is a template, JS uses cloneNode then removes hidden and id. -->
-    <!-- TODO: Render tex with renderToElement (katex) -->
-    <div class="problem hidden" id="problem-template">
-      <p>{name}</p>
-      <pre>{tex}</pre>
     </div>
 
     <form id="logout-form"><input type="submit" value="Logout"></form>
@@ -49,6 +39,13 @@
       <input type="submit" value="Register">
     </form>
     <p>Have an account? <a href="#login">login</a></p>
+  </div>
+
+  <!-- This is a template, JS uses cloneNode then removes hidden and id. -->
+  <!-- TODO: Render tex with renderToElement (katex) -->
+  <div class="problem hidden" id="problem-template">
+    <p>{name}</p>
+    <pre>{tex}</pre>
   </div>
 </body>
 
