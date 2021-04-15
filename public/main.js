@@ -51,6 +51,19 @@ api.bio = async (bio) => {
   })
 }
 
+api.problems = {}
+
+api.problems.update = async (id, problem) => {
+  return await fetch(`/api/problems/update?id=${id}`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${localStorage.access_token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(problem),
+  })
+}
+
 const hookRegisterForm = () => {
   $("register-form").addEventListener("submit", async (e) => {
     if (e.preventDefault) e.preventDefault()
@@ -156,18 +169,36 @@ const renderEditor = (tex) => {
   $("edit-output").replaceChildren(errors, target)
 }
 
-const hookProblemEdit = (el) => {
+const hookProblemEdit = (el, data) => {
   el.querySelector("button").addEventListener('click', (e) => {
     if (e.preventDefault) e.preventDefault()
 
-    const tex = el.querySelector('[slot="tex"]').innerText
-    $('edit-textarea').value = tex
-    $('edit-textarea').addEventListener("input", (e) => {
-      renderEditor(e.target.value)
-    })
+    $('edit-textarea').value = data.tex
+    $('problem-id').value = data.id
+    $('problem-name').value = data.name
+    renderEditor(data.tex)
 
-    renderEditor(tex)
     navigate('editor')
+
+    return false
+  })
+  return el
+}
+
+
+const hookEditor = () => {
+  $('edit-textarea').addEventListener("input", (e) => {
+    renderEditor(e.target.value)
+  })
+
+  $('edit-form').addEventListener('submit', async (e) => {
+    if (e.preventDefault) e.preventDefault()
+
+    const id = parseInt($('problem-id').value)
+    await api.problems.update(id, {
+      tex: e.target.tex.value,
+      name: e.target['problem-name'].value,
+    })
 
     return false
   })
@@ -240,15 +271,13 @@ const onLoggedIn = async () => {
     return
   }
   const profile = await resp.json()
+  console.log(profile.problems)
 
   // Render our problems
-  profile.problems = [
-    {name: 'yes', tex: '2+2'},
-    {name: 'no', tex: '3+3'}
-  ]
-
-  const children = profile.problems.map(data => template('problem', data))
-  children.forEach(el => hookProblemEdit(el))
+  const children = profile.problems.map(data => {
+    const el = template('problem', data)
+    return hookProblemEdit(el, data)
+  })
   $('my-problems').replaceChildren(...children)
 
   navigate('home', profile)
@@ -263,6 +292,7 @@ const contentLoaded = () => {
   hookRegisterForm()
   hookLogoutForm()
   hookBioForm()
+  hookEditor()
 
   if (isLoggedIn()) {
     onLoggedIn()
