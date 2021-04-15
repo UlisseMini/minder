@@ -141,52 +141,27 @@ const onAccessToken = (access_token) => {
   onLoggedIn()
 }
 
-// An object doesn't work for some reason, if h = document.createElement we know
-// h('p') != h('p')
-// so you would expect
-// x = {}; x[h('p')] = 5; x[h('p')] == undefined
-// but it isn't! it gives us 5, a Map works though.
-const templateText = new Map()
-
-// TODO: once to prevent memory leaks when template is used
-const populate = (el, data, once) => {
-  // once means we're only populating once.
-
-  // Replace our children's text
-  // TODO: Only children we care about? faster.
-  Array.from(el.children).forEach(child => populate(child, data))
-
-  // Check that we have text \w templates before we replace
-  // If we don't do this we'll reset text without templates in it!
-  if ((!el.firstChild || !el.firstChild.nodeValue)
-    || !el.firstChild.nodeValue.match(/{\w+}/g)) {
-    return el
-  }
-
-  // Save template text for next time
-  if (!once && !templateText.get(el)) {templateText.set(el, el.firstChild.nodeValue)}
-
-  // Replace our text
-  let text = once ? el.firstChild.nodeValue : templateText.get(el)
-  Object.entries(data).forEach(([name, value]) => {
-    text = text.replaceAll(`{${name}}`, value)
-  })
-  el.firstChild.nodeValue = text
-
-  return el
-}
-
 const navigate = (page, data) => {
+  if (data) populateSlots($(page), data)
+
   window.location.hash = '#' + page
-  if (data) populate($(page), data)
 }
 
-const template = (name, data) => {
-  const id = name + '-template'
+const populateSlots = (el, data) => {
+  el.querySelectorAll('[slot]').forEach(slotEl => {
+    const name = slotEl.getAttribute('slot')
+    if (!data[name]) {crash({msg: 'no data', slotValue: name, data: data})}
+
+    slotEl.innerText = data[name]
+  })
+}
+
+const template = (id, data) => {
   const el = $(id).cloneNode(true)
   el.classList.remove('hidden')
   el.removeAttribute('id')
-  if (data) {populate(el, data, true)}
+  if (data) {populateSlots(el, data)}
+
   return el
 }
 

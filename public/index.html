@@ -11,10 +11,14 @@
 <body>
   <noscript>You must enable javascript to use this app!</noscript>
 
-  <div id="home" class="hidden">
-    <p>Welcome {username}!</p>
+  <div id="app">
 
-    <textarea name="bio" form="bio-form" placeholder="Edit bio">{bio}</textarea>
+  </div>
+
+  <div id="home" class="hidden">
+    <p>Welcome <span slot="username"></span>!</p>
+
+    <textarea name="bio" form="bio-form" placeholder="Edit bio" slot="bio"></textarea>
     <form id="bio-form"><input type="submit" value="Save" name="save"></form>
 
     <div id="my-problems">
@@ -41,12 +45,10 @@
     <p>Have an account? <a href="#login">login</a></p>
   </div>
 
-  <!-- This is a template, JS uses cloneNode then removes hidden and id. -->
-  <!-- TODO: Render tex with renderToElement (katex) -->
-  <div class="problem hidden" id="problem-template">
-    <p>{name}</p>
-    <pre>{tex}</pre>
-  </div>
+  <template id="problem">
+    <p slot="name"></p>
+    <pre slot="tex"></pre>
+  </template>
 </body>
 
 </html>
