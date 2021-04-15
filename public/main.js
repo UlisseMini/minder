@@ -64,6 +64,95 @@ api.problems.update = async (id, problem) => {
   })
 }
 
+const Editor = {
+  root: $("editor"),
+
+  query: function (sel) {
+    return this.root.querySelector(sel)
+  },
+
+  save: async function () {
+    const resp = await api.problems.update(this.problem.id, {
+      tex: this.problem.tex,
+      name: this.problem.name,
+    })
+    if (resp.status != 200) {
+      crash(resp.json())
+    }
+
+    const problemJson = await resp.json()
+
+    populateSlots(this.attached, problemJson)
+    this.setProblem(problemJson)
+    navigate("home")
+  },
+
+  setProblem: function (problem) {
+    this.problem = problem
+  },
+
+  init: function () {
+    this.query("textarea").addEventListener("input", (e) => {
+      this.setProblem({...this.problem, tex: e.target.value})
+      this.renderMath()
+    })
+
+    this.query('[name="problem-name"]').addEventListener("input", (e) => {
+      this.setProblem({...this.problem, name: e.target.value})
+    })
+
+    this.query("form").addEventListener('submit', async (e) => {
+      if (e.preventDefault) e.preventDefault()
+
+      await this.save()
+
+      return false
+    })
+  },
+
+  populate: function (problem) {
+    this.query('textarea').value = problem.tex
+    this.query('[name="problem-id"]').value = problem.id
+    this.query('[name="problem-name"]').value = problem.name
+
+    this.setProblem(problem)
+    this.renderMath()
+  },
+
+  attach: function (problemEl) {
+    this.attached = problemEl
+  },
+
+  renderMath: function () {
+    const target = document.createElement("p")
+    target.id = "edit-target" // must be in sync with 
+    target.innerText = Editor.problem.tex
+
+    const errors = document.createElement("p")
+    errors.style.color = "red"
+    errors.id = "edit-errors"
+
+    let errorsList = []
+
+    // Provided by auto-render.js (katex extension)
+    renderMathInElement(target, {
+      delimiters: [
+        {left: "$$", right: "$$", display: true},
+        {left: "$", right: "$", display: false},
+        {left: "\\(", right: "\\)", display: false},
+        {left: "\\[", right: "\\]", display: true}
+      ],
+      errorCallback: (msg) => {
+        errorsList.push(msg)
+      }
+    })
+
+    errors.innerText = errorsList.join('\n')
+
+    this.query("#edit-output").replaceChildren(errors, target)
+  }
+}
+
 const hookRegisterForm = () => {
   $("register-form").addEventListener("submit", async (e) => {
     if (e.preventDefault) e.preventDefault()
@@ -140,68 +229,22 @@ const hookBioForm = () => {
   })
 }
 
-const renderEditor = (tex) => {
-  const target = document.createElement("p")
-  target.id = "edit-target" // must be in sync with 
-  target.innerText = tex
 
-  const errors = document.createElement("p")
-  errors.style.color = "red"
-  errors.id = "edit-errors"
-
-  let errorsList = []
-
-  // Provided by auto-render.js (katex extension)
-  renderMathInElement(target, {
-    delimiters: [
-      {left: "$$", right: "$$", display: true},
-      {left: "$", right: "$", display: false},
-      {left: "\\(", right: "\\)", display: false},
-      {left: "\\[", right: "\\]", display: true}
-    ],
-    errorCallback: (msg) => {
-      errorsList.push(msg)
-    }
-  })
-
-  errors.innerText = errorsList.join('\n')
-
-  $("edit-output").replaceChildren(errors, target)
-}
-
+// FIXME: When you edit something edited it doesn't update since
+// data is closed over
 const hookProblemEdit = (el, data) => {
   el.querySelector("button").addEventListener('click', (e) => {
     if (e.preventDefault) e.preventDefault()
 
-    $('edit-textarea').value = data.tex
-    $('problem-id').value = data.id
-    $('problem-name').value = data.name
-    renderEditor(data.tex)
+    Editor.populate(data)
+    Editor.attach(el)
+    Editor.renderMath()
 
     navigate('editor')
 
     return false
   })
   return el
-}
-
-
-const hookEditor = () => {
-  $('edit-textarea').addEventListener("input", (e) => {
-    renderEditor(e.target.value)
-  })
-
-  $('edit-form').addEventListener('submit', async (e) => {
-    if (e.preventDefault) e.preventDefault()
-
-    const id = parseInt($('problem-id').value)
-    await api.problems.update(id, {
-      tex: e.target.tex.value,
-      name: e.target['problem-name'].value,
-    })
-
-    return false
-  })
 }
 
 const onAccessToken = (access_token) => {
@@ -292,7 +335,7 @@ const contentLoaded = () => {
   hookRegisterForm()
   hookLogoutForm()
   hookBioForm()
-  hookEditor()
+  Editor.init()
 
   if (isLoggedIn()) {
     onLoggedIn()
