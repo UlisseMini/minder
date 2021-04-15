@@ -127,6 +127,52 @@ const hookBioForm = () => {
   })
 }
 
+const renderEditor = (tex) => {
+  const target = document.createElement("p")
+  target.id = "edit-target" // must be in sync with 
+  target.innerText = tex
+
+  const errors = document.createElement("p")
+  errors.style.color = "red"
+  errors.id = "edit-errors"
+
+  let errorsList = []
+
+  // Provided by auto-render.js (katex extension)
+  renderMathInElement(target, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false},
+      {left: "\\(", right: "\\)", display: false},
+      {left: "\\[", right: "\\]", display: true}
+    ],
+    errorCallback: (msg) => {
+      errorsList.push(msg)
+    }
+  })
+
+  errors.innerText = errorsList.join('\n')
+
+  $("edit-output").replaceChildren(errors, target)
+}
+
+const hookProblemEdit = (el) => {
+  el.querySelector("button").addEventListener('click', (e) => {
+    if (e.preventDefault) e.preventDefault()
+
+    const tex = el.querySelector('[slot="tex"]').innerText
+    $('edit-textarea').value = tex
+    $('edit-textarea').addEventListener("input", (e) => {
+      renderEditor(e.target.value)
+    })
+
+    renderEditor(tex)
+    navigate('editor')
+
+    return false
+  })
+}
+
 const onAccessToken = (access_token) => {
   if (typeof access_token != 'string') {
     crash(`access token isn't a string, got ${access_token}`)
@@ -150,9 +196,11 @@ const navigate = (page, data) => {
 const populateSlots = (el, data) => {
   el.querySelectorAll('[slot]').forEach(slotEl => {
     const name = slotEl.getAttribute('slot')
-    if (!data[name]) {crash({msg: 'no data', slotValue: name, data: data})}
 
-    slotEl.innerText = data[name]
+    // If no data, just don't populate
+    if (data[name]) {
+      slotEl.innerText = data[name]
+    }
   })
 }
 
@@ -200,6 +248,7 @@ const onLoggedIn = async () => {
   ]
 
   const children = profile.problems.map(data => template('problem', data))
+  children.forEach(el => hookProblemEdit(el))
   $('my-problems').replaceChildren(...children)
 
   navigate('home', profile)
