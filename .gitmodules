@@ -1,0 +1,3 @@
+[submodule "binder"]
+	path = public/binder
+	url = https://github.com/ulissemini/binder
