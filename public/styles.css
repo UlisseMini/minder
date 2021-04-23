@@ -11,7 +11,7 @@ body {
 a { color: #337ab7; text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-.hidden { display: none; }
+.hidden, [data-tmpl] { display: none; }
 .hidden:target { display: block; }
 
 .sq-100 {
