@@ -1,4 +1,6 @@
-function $(x) {return document.getElementById(x)}
+// fun fact: these are actually provided by many browsers for debugging
+const $ = document.querySelector.bind(document)
+const $$ = document.querySelectorAll.bind(document)
 
 // Raising an exception and alerting might be better
 // If I'm going this route I should use sentry tbh
@@ -14,147 +16,49 @@ function crash(msg) {
   <p>Include a screenshot of the dev console and network tab if possible.</p>
   <pre style="color: red;">${msg}</pre>
   `
+  throw msg
 }
 
-const api = {}
-
-api.login = async (username, password) => {
-  return await fetch("/api/login", {
-    method: "POST",
-    body: new URLSearchParams({"username": username, "password": password})
-  })
-}
-
-api.register = async (username, password) => {
-  return await fetch("/api/register", {
-    method: "POST",
-    body: new URLSearchParams({"username": username, "password": password})
-  })
-}
-
-api.profile = async () => {
-  return await fetch("/api/profile", {
-    headers: {
-      "Authorization": `Bearer ${localStorage.access_token}`,
-    }
-  })
-}
-
-api.bio = async (bio) => {
-  return await fetch("/api/bio", {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${localStorage.access_token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({bio: bio}),
-  })
-}
-
-api.problems = {}
-
-api.problems.update = async (id, problem) => {
-  return await fetch(`/api/problems/update?id=${id}`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${localStorage.access_token}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(problem),
-  })
-}
-
-const Editor = {
-  root: $("editor"),
-
-  query: function (sel) {
-    return this.root.querySelector(sel)
-  },
-
-  save: async function () {
-    const resp = await api.problems.update(this.problem.id, {
-      tex: this.problem.tex,
-      name: this.problem.name,
+const crashOnStatus = async (resp, json) => {
+  if (resp.status != 200) {
+    crash({
+      msg: `bad status ${resp.status} from ${resp.url}`,
+      json: json || await resp.json(),
     })
-    if (resp.status != 200) {
-      crash(resp.json())
-    }
-
-    const problemJson = await resp.json()
-
-    populateSlots(this.attached, problemJson)
-    this.setProblem(problemJson)
-    navigate("home")
-  },
-
-  setProblem: function (problem) {
-    this.problem = problem
-  },
-
-  init: function () {
-    this.query("textarea").addEventListener("input", (e) => {
-      this.setProblem({...this.problem, tex: e.target.value})
-      this.renderMath()
-    })
-
-    this.query('[name="problem-name"]').addEventListener("input", (e) => {
-      this.setProblem({...this.problem, name: e.target.value})
-    })
-
-    this.query("form").addEventListener('submit', async (e) => {
-      if (e.preventDefault) e.preventDefault()
-
-      await this.save()
-
-      return false
-    })
-  },
-
-  populate: function (problem) {
-    this.query('textarea').value = problem.tex
-    this.query('[name="problem-id"]').value = problem.id
-    this.query('[name="problem-name"]').value = problem.name
-
-    this.setProblem(problem)
-    this.renderMath()
-  },
-
-  attach: function (problemEl) {
-    this.attached = problemEl
-  },
-
-  renderMath: function () {
-    const target = document.createElement("p")
-    target.id = "edit-target" // must be in sync with 
-    target.innerText = Editor.problem.tex
-
-    const errors = document.createElement("p")
-    errors.style.color = "red"
-    errors.id = "edit-errors"
-
-    let errorsList = []
-
-    // Provided by auto-render.js (katex extension)
-    renderMathInElement(target, {
-      delimiters: [
-        {left: "$$", right: "$$", display: true},
-        {left: "$", right: "$", display: false},
-        {left: "\\(", right: "\\)", display: false},
-        {left: "\\[", right: "\\]", display: true}
-      ],
-      errorCallback: (msg) => {
-        errorsList.push(msg)
-      }
-    })
-
-    errors.innerText = errorsList.join('\n')
-
-    this.query("#edit-output").replaceChildren(errors, target)
   }
 }
 
+const renderMath = (tex, outputEl) => {
+  const target = document.createElement("p")
+  target.id = "edit-target" // must be in sync with 
+  target.innerText = tex
+
+  const errors = document.createElement("p")
+  errors.style.color = "red"
+  errors.id = "edit-errors"
+
+  let errorsList = []
+
+  // Provided by auto-render.js (katex extension)
+  renderMathInElement(target, {
+    delimiters: [
+      {left: "$$", right: "$$", display: true},
+      {left: "$", right: "$", display: false},
+      {left: "\\(", right: "\\)", display: false},
+      {left: "\\[", right: "\\]", display: true}
+    ],
+    errorCallback: (msg) => {
+      errorsList.push(msg)
+    }
+  })
+
+  errors.innerText = errorsList.join('\n')
+
+  outputEl.replaceChildren(errors, target)
+}
+
 const hookRegisterForm = () => {
-  $("register-form").addEventListener("submit", async (e) => {
+  $("#register-form").addEventListener("submit", async (e) => {
     if (e.preventDefault) e.preventDefault()
 
     const resp = await api.register(e.target.username.value, e.target.password.value)
@@ -165,7 +69,7 @@ const hookRegisterForm = () => {
 }
 
 const hookLoginForm = () => {
-  $("login-form").addEventListener("submit", async (e) => {
+  $("#login-form").addEventListener("submit", async (e) => {
     if (e.preventDefault) e.preventDefault()
 
     const resp = await api.login(e.target.username.value, e.target.password.value)
@@ -178,21 +82,18 @@ const hookLoginForm = () => {
 // Used in common between login and register, since they both return an auth response.
 const handleAuthResp = async (resp) => {
   const json = await resp.json()
-  if (resp.status != 200) {
-    if (resp.status == 400) {
-      // should be unknown user or pass
-      alert(json['detail'])
-    } else {
-      crash(json)
-    }
-    return
+  if (resp.status == 200) {
+    onAccessToken(json['access_token'])
+  } else if (resp.status == 400) {
+    // should be unknown user or pass
+    alert(json['detail'])
+  } else {
+    await crashOnStatus(resp, json)
   }
-
-  onAccessToken(json['access_token'])
 }
 
 const hookLogoutForm = () => {
-  $("logout-form").addEventListener("submit", (e) => {
+  $("#logout-form").addEventListener("submit", (e) => {
     if (e.preventDefault) e.preventDefault()
 
     localStorage.removeItem("access_token")
@@ -203,7 +104,7 @@ const hookLogoutForm = () => {
 }
 
 const hookBioForm = () => {
-  $("bio-form").addEventListener("submit", async (e) => {
+  $("#bio-form").addEventListener("submit", async (e) => {
     if (e.preventDefault) e.preventDefault()
 
     e.target.save.value = "Saving"
@@ -211,6 +112,7 @@ const hookBioForm = () => {
     const bio = e.target.bio.value
     const resp = await api.bio(bio)
     if (resp.status != 200) {
+      // TODO: Abstract the check if logged in logic
       if (!isLoggedIn()) {
         console.log("token expired")
         e.target.save.value = "Save"
@@ -219,7 +121,7 @@ const hookBioForm = () => {
       }
 
       const json = await resp.json()
-      crash({status: resp.status, json: json})
+      await crashOnStatus(resp, json)
     }
 
     e.target.save.value = "Saved"
@@ -229,22 +131,49 @@ const hookBioForm = () => {
   })
 }
 
+const Problem = (data) => {
+  const el = template('problem', data)
+  el.dataset.pid = data.id
+  hookProblemEdit(el)
+  return el
+}
 
-// FIXME: When you edit something edited it doesn't update since
-// data is closed over
-const hookProblemEdit = (el, data) => {
-  el.querySelector("button").addEventListener('click', (e) => {
+const saveEditor = async (problem) => {
+  console.log(problem)
+  const resp = await api.problems.update(problem)
+  await crashOnStatus(resp)
+
+  $(`[data-pid="${problem.id}"]`).replaceWith(Problem(problem))
+  navigate("home")
+}
+
+const hookEditor = () => {
+  $("#edit-form").addEventListener("submit", (e) => {
     if (e.preventDefault) e.preventDefault()
 
-    Editor.populate(data)
-    Editor.attach(el)
-    Editor.renderMath()
+    const problem = getSlots($("#editor"))
+    saveEditor(problem)
 
+    return false
+  })
+
+  $("#editor textarea").addEventListener("input", (e) => {
+    renderMath(e.target.value, $("#edit-output"))
+  })
+}
+
+const hookProblemEdit = (problemEl) => {
+  problemEl.querySelector("button").addEventListener('click', (e) => {
+    if (e.preventDefault) e.preventDefault()
+
+    const problem = getSlots(problemEl)
+    problem.id = problemEl.dataset.pid
+    setSlots($("#editor"), problem)
+    renderMath(problem.tex, $("#edit-output"))
     navigate('editor')
 
     return false
   })
-  return el
 }
 
 const onAccessToken = (access_token) => {
@@ -261,30 +190,11 @@ const onAccessToken = (access_token) => {
   onLoggedIn()
 }
 
-const navigate = (page, data) => {
-  if (data) populateSlots($(page), data)
-
+// TODO: Maybe instead of css hidden use replaceChild on app element with
+// filled out template. aka "real" client side routing.
+const navigate = (page) => {
+  console.log('navigate', page)
   window.location.hash = '#' + page
-}
-
-const populateSlots = (el, data) => {
-  el.querySelectorAll('[slot]').forEach(slotEl => {
-    const name = slotEl.getAttribute('slot')
-
-    // If no data, just don't populate
-    if (data[name]) {
-      slotEl.innerText = data[name]
-    }
-  })
-}
-
-const template = (id, data) => {
-  const el = $(id).cloneNode(true)
-  el.classList.remove('hidden')
-  el.removeAttribute('id')
-  if (data) {populateSlots(el, data)}
-
-  return el
 }
 
 const parseJWT = (token) => {
@@ -308,34 +218,38 @@ const isLoggedIn = () => {
 
 const onLoggedIn = async () => {
   const resp = await api.profile()
-  if (resp.status != 200) {
-    const json = await resp.json()
-    crash({status: resp.status, json: json})
-    return
-  }
+  await crashOnStatus(resp)
+
   const profile = await resp.json()
   console.log(profile.problems)
 
   // Render our problems
-  const children = profile.problems.map(data => {
-    const el = template('problem', data)
-    return hookProblemEdit(el, data)
-  })
-  $('my-problems').replaceChildren(...children)
+  const children = profile.problems.map((data) => Problem(data))
+  $('#my-problems').replaceChildren(...children)
 
-  navigate('home', profile)
+  setSlots($("#home"), profile)
+  navigate('home')
 }
 
 const onLoggedOut = () => {
   navigate('login')
 }
 
+const hookNavigation = () => {
+  $$('a[href^="#"]').forEach(el => {
+    el.addEventListener("click", () => {
+      navigate(el.getAttribute('href').slice(1))
+    })
+  })
+}
+
 const contentLoaded = () => {
+  hookNavigation()
   hookLoginForm()
   hookRegisterForm()
   hookLogoutForm()
   hookBioForm()
-  Editor.init()
+  hookEditor()
 
   if (isLoggedIn()) {
     onLoggedIn()

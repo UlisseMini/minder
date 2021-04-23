@@ -15,6 +15,8 @@
   <!-- To automatically render math in text elements, include the auto-render extension: -->
   <script defer src="https://cdn.jsdelivr.net/npm/katex@0.13.2/dist/contrib/auto-render.min.js" integrity="sha384-vZTG03m+2yp6N6BNi5iM4rW4oIwk5DfcNdFfxkk9ZWpDriOkXX8voJBFrAO7MpVl" crossorigin="anonymous"></script>
 
+  <script defer src="/utils.js"></script>
+  <script defer src="/api.js"></script>
   <script defer src="/main.js"></script>
 </head>
 
@@ -22,10 +24,11 @@
   <noscript>You must enable javascript to use this app!</noscript>
 
   <div id="editor" class="hidden">
-    <textarea name="tex" form="edit-form"></textarea>
+    <textarea name="tex" form="edit-form" slot="tex"></textarea>
     <form id="edit-form">
-      <input type="text" name="problem-name">
-      <input type="hidden" name="problem-id">
+      <input type="text" name="problem-name" slot="name">
+      <input type="hidden" name="problem-id" slot="id">
+      <br>
       <input type="submit" name="save" value="Save">
     </form>
     <div id="edit-output">
@@ -62,7 +65,7 @@
     <p>Have an account? <a href="#login">login</a></p>
   </div>
 
-  <div id="problem" class="hidden">
+  <div data-tmpl="problem">
     <p slot="name"></p>
     <pre slot="tex"></pre>
     <button>Edit</button>
