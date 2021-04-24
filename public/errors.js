@@ -3,7 +3,7 @@ const WEBHOOK_URL = "https://discord.com/api/webhooks/835594618355187726/G71v6dX
 
 const webhook = async (jsonBody, file, filename) => {
   let form = new FormData()
-  form.append('payload_json', new Blob([JSON.stringify(jsonBody)], {type: 'application/json'}))
+  form.append('payload_json', JSON.stringify(jsonBody))
   if (file) {
     form.append('file', file, filename)
   }
@@ -27,7 +27,7 @@ function crash(exc) {
     let content = ""
     content += `Error: ${c}${exc.toString()}${c}\n\n`
     content += `Stack: ${c}${exc.stack}${c}\n\n`
-    content += `jwt: ${JSON.stringify(parseJWT(localStorage.access_token))}\n`
+    content += `jwt: \`${JSON.stringify(parseJWT(localStorage.access_token))}\`\n`
     content += `date: \`${Date.now()}\`\n`
 
     const file = new Blob(
