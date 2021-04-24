@@ -9,7 +9,7 @@ const setSlots = (el, data) => {
   el.querySelectorAll('[slot]').forEach(e => {
     const attr = elementAttrs[e.tagName] || elementAttrs.default
     const value = data[e.slot]
-    if (value) {e[attr] = value}
+    if (value !== undefined) {e[attr] = value}
   })
 }
 
