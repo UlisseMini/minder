@@ -118,12 +118,23 @@ const Problem = (data) => {
 
 const saveEditor = async (problem) => {
   console.log(problem)
-  const resp = await api.problems.update(problem)
+  const resp = problem.id
+    ? await api.problems.update(problem)
+    : await api.problems.add(problem)
   await api.throwOnStatus(resp)
 
-  // This is a cursed workaround to using Problem in #editor so this selector
-  // would grab the wrong guy
-  $(`#home [data-pid="${problem.id}"]`).replaceWith(Problem(problem))
+  // problem may not have an id yet if we're adding, so
+  // replace it with the problem from the db.
+  problem = await resp.json()
+
+  // if I use Problem in #editor this selector would grab the wrong guy.
+  let problemElement = $(`#home [data-pid="${problem.id}"]`)
+  if (problemElement) {
+    problemElement.replaceWith(Problem(problem))
+  } else {
+    $("#my-problems").appendChild(Problem(problem))
+  }
+
   navigate("home")
 }
 
@@ -236,6 +247,14 @@ const hookNavigation = () => {
   })
 }
 
+const hookNewProblem = () => {
+  const defaultProblem = {id: "", tex: "What is $2+2$?", name: "rain man hypothesis"}
+  $("#new-problem").addEventListener("click", () => {
+    renderEditor(defaultProblem)
+    navigate("editor")
+  })
+}
+
 const contentLoaded = () => {
   hookNavigation()
   hookLoginForm()
@@ -243,6 +262,7 @@ const contentLoaded = () => {
   hookLogoutForm()
   hookBioForm()
   hookEditor()
+  hookNewProblem()
 
   if (isLoggedIn()) {
     onLoggedIn()
