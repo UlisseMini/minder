@@ -2,32 +2,6 @@
 const $ = document.querySelector.bind(document)
 const $$ = document.querySelectorAll.bind(document)
 
-// Raising an exception and alerting might be better
-// If I'm going this route I should use sentry tbh
-// FIXME: Possible but unlikely/hard to exploit XSS
-function crash(msg) {
-  console.error(msg)
-
-  if (typeof msg != 'string') {msg = JSON.stringify(msg, null, 2)}
-
-  document.body.innerHTML = `
-  <h1>An error has occured</h1>
-  <p>Please report this to <code>uli#4334</code> on discord, or <a href="https://github.com/UlisseMini/minder/issues">on github</a></p>
-  <p>Include a screenshot of the dev console and network tab if possible.</p>
-  <pre style="color: red;">${msg}</pre>
-  `
-  throw msg
-}
-
-const crashOnStatus = async (resp, json) => {
-  if (resp.status != 200) {
-    crash({
-      msg: `bad status ${resp.status} from ${resp.url}`,
-      json: json || await resp.json(),
-    })
-  }
-}
-
 // global state ):
 const state = {}
 
@@ -91,7 +65,7 @@ const handleAuthResp = async (resp) => {
     // should be unknown user or pass
     alert(json['detail'])
   } else {
-    await crashOnStatus(resp, json)
+    await api.throwOnStatus(resp, json)
   }
 }
 
@@ -124,7 +98,7 @@ const hookBioForm = () => {
       }
 
       const json = await resp.json()
-      await crashOnStatus(resp, json)
+      await api.throwOnStatus(resp, json)
     }
 
     e.target.save.value = "Saved"
@@ -145,7 +119,7 @@ const Problem = (data) => {
 const saveEditor = async (problem) => {
   console.log(problem)
   const resp = await api.problems.update(problem)
-  await crashOnStatus(resp)
+  await api.throwOnStatus(resp)
 
   // This is a cursed workaround to using Problem in #editor so this selector
   // would grab the wrong guy
@@ -179,7 +153,7 @@ const problemById = (id) => {
   for (const p of state.profile.problems) {
     if (p.id == id) {return p}
   }
-  throw `no problem id=${id} in problems=${JSON.stringify(state.profile.problems)}`
+  throw new Error(`no problem id=${id} in problems=${JSON.stringify(state.profile.problems)}`)
 }
 
 const hookProblemEdit = (problemEl) => {
@@ -197,14 +171,12 @@ const hookProblemEdit = (problemEl) => {
 
 const onAccessToken = (access_token) => {
   if (typeof access_token != 'string') {
-    crash(`access token isn't a string, got ${access_token}`)
-    return
+    throw new Error(`access token isn't a string, got ${access_token}`)
   }
 
   localStorage.setItem('access_token', access_token)
   if (!isLoggedIn()) {
-    crash('obtained access token but isLoggedIn -> false')
-    return
+    throw new Error('obtained access token but isLoggedIn -> false')
   }
   onLoggedIn()
 }
@@ -237,7 +209,7 @@ const isLoggedIn = () => {
 
 const onLoggedIn = async () => {
   const resp = await api.profile()
-  await crashOnStatus(resp)
+  await api.throwOnStatus(resp)
 
   const profile = await resp.json()
   state.profile = profile

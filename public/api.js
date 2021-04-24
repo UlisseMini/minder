@@ -1,5 +1,29 @@
 const api = {}
 
+class APIError extends Error {
+  constructor(message, json) {
+    super(message)
+    this.name = "APIError"
+    this.msg = message
+    this.json = json
+  }
+
+  toString() {
+    return JSON.stringify({
+      name: this.name,
+      msg: this.msg,
+      json: this.json,
+    }, null, 2)
+  }
+}
+
+api.throwOnStatus = async (resp, json) => {
+  if (resp.status != 200) {
+    throw new APIError(`bad status ${resp.status} from ${resp.url}`, json || await resp.json())
+  }
+}
+
+
 api.login = async (username, password) => {
   return await fetch("/api/login", {
     method: "POST",
