@@ -70,3 +70,14 @@ api.problems.update = async (problem) => {
   })
 }
 
+api.problems.add = async (problem) => {
+  return await fetch(`/api/problems/add`, {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${localStorage.access_token}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(problem),
+  })
+}
+
