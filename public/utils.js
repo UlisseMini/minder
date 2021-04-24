@@ -16,7 +16,10 @@ const setSlots = (el, data) => {
 const getSlots = (el) => {
   const data = {}
   el.querySelectorAll('[slot]').forEach(e => {
-    data[e.slot] = e[elementAttrs[e.tagName] || elementAttrs.default]
+    const attr = elementAttrs[e.tagName]
+    if (!attr)
+      throw `no attr for ${e.tagName} elements, remember innerText screws up whitespace`
+    data[e.slot] = e[attr]
   })
   return data
 }

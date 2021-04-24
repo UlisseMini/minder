@@ -24,13 +24,15 @@
   <noscript>You must enable javascript to use this app!</noscript>
 
   <div id="editor" class="hidden">
-    <textarea name="tex" form="edit-form" slot="tex"></textarea>
-    <form id="edit-form">
-      <input type="text" name="problem-name" slot="name">
-      <input type="hidden" name="problem-id" slot="id">
-      <br>
-      <input type="submit" name="save" value="Save">
-    </form>
+    <div id="editor-form">
+      <textarea name="tex" form="edit-form" slot="tex"></textarea>
+      <form id="edit-form">
+        <input type="text" name="problem-name" slot="name">
+        <input type="hidden" name="problem-id" slot="id">
+        <br>
+        <input type="submit" name="save" value="Save">
+      </form>
+    </div>
     <div id="edit-output">
     </div>
   </div>
@@ -67,7 +69,7 @@
 
   <div data-tmpl="problem">
     <p slot="name"></p>
-    <pre slot="tex"></pre>
+    <p data-tex-rendered=""></p>
     <button>Edit</button>
   </div>
 </body>

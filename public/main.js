@@ -28,6 +28,9 @@ const crashOnStatus = async (resp, json) => {
   }
 }
 
+// global state ):
+const state = {}
+
 const renderMath = (tex, outputEl) => {
   const target = document.createElement("p")
   target.id = "edit-target" // must be in sync with 
@@ -133,6 +136,7 @@ const hookBioForm = () => {
 
 const Problem = (data) => {
   const el = template('problem', data)
+  renderMath(data.tex, el.querySelector(`[data-tex-rendered]`))
   el.dataset.pid = data.id
   hookProblemEdit(el)
   return el
@@ -143,33 +147,48 @@ const saveEditor = async (problem) => {
   const resp = await api.problems.update(problem)
   await crashOnStatus(resp)
 
-  $(`[data-pid="${problem.id}"]`).replaceWith(Problem(problem))
+  // This is a cursed workaround to using Problem in #editor so this selector
+  // would grab the wrong guy
+  $(`#home [data-pid="${problem.id}"]`).replaceWith(Problem(problem))
   navigate("home")
+}
+
+const renderEditor = (problem) => {
+  setSlots($("#editor"), problem)
+  renderMath(problem.tex, $("#edit-output"))
 }
 
 const hookEditor = () => {
   $("#edit-form").addEventListener("submit", (e) => {
     if (e.preventDefault) e.preventDefault()
 
-    const problem = getSlots($("#editor"))
+    const problem = getSlots($("#editor-form"))
     saveEditor(problem)
 
     return false
   })
 
   $("#editor textarea").addEventListener("input", (e) => {
-    renderMath(e.target.value, $("#edit-output"))
+    const tex = e.target.value
+    renderMath(tex, $("#edit-output"))
   })
+}
+
+// TODO: Have the API return a dict of id -> problem.
+const problemById = (id) => {
+  for (const p of state.profile.problems) {
+    if (p.id == id) {return p}
+  }
+  throw `no problem id=${id} in problems=${JSON.stringify(state.profile.problems)}`
 }
 
 const hookProblemEdit = (problemEl) => {
   problemEl.querySelector("button").addEventListener('click', (e) => {
     if (e.preventDefault) e.preventDefault()
 
-    const problem = getSlots(problemEl)
-    problem.id = problemEl.dataset.pid
-    setSlots($("#editor"), problem)
-    renderMath(problem.tex, $("#edit-output"))
+    const problem = problemById(problemEl.dataset.pid)
+
+    renderEditor(problem)
     navigate('editor')
 
     return false
@@ -221,6 +240,7 @@ const onLoggedIn = async () => {
   await crashOnStatus(resp)
 
   const profile = await resp.json()
+  state.profile = profile
   console.log(profile.problems)
 
   // Render our problems
@@ -232,6 +252,7 @@ const onLoggedIn = async () => {
 }
 
 const onLoggedOut = () => {
+  state.profile = null
   navigate('login')
 }
 

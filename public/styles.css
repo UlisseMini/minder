@@ -28,3 +28,7 @@ input {
   border-radius: 9999px;
 }
 
+textarea {
+  min-width: 200px;
+  min-height: 100px;
+}
