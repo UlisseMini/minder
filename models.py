@@ -20,8 +20,8 @@ class Problem(Base):
     __tablename__ = "problems"
 
     id = Column(Integer, primary_key=True)
-    name = Column(String)
-    tex = Column(String)
+    name = Column(String(64))
+    tex = Column(String(1024))
     author_id = Column(Integer, ForeignKey("users.id"))
 
     author = relationship("User", back_populates="problems")
