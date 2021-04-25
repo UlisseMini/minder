@@ -6,6 +6,7 @@ import crud
 import models, schemas
 from database import engine, get_db, Session
 from auth import Token, get_current_user, get_password_hash, authenticate_user, create_access_token
+from typing import List
 
 models.Base.metadata.create_all(bind=engine)
 
@@ -84,10 +85,11 @@ def update_problems(
     return db_problem
 
 
-@api.get("/problems/get")
+@api.get("/problems/get", response_model=List[schemas.ProblemGet])
 def get_problems(user = Depends(get_current_user), db = Depends(get_db)):
     "Get problems, eventually these will be taylored for the logged in user"
-    return db.query(models.Problem).filter(models.Problem.author_id != user.id).all()
+    problems = db.query(models.Problem).filter(models.Problem.author_id != user.id).all()
+    return problems
 
 
 app.include_router(api, prefix='/api')
