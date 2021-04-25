@@ -35,3 +35,8 @@ const template = (name, data) => {
 
   return el
 }
+
+const $ = (a, b) => b ? a.querySelector(b) : document.querySelector(a)
+const $$ = (a, b) => b ? a.querySelectorAll(b) : document.querySelectorAll(a)
+
+export {$, $$, setSlots, getSlots, template}

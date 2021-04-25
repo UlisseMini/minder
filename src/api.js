@@ -89,3 +89,5 @@ api.problems.get = async () => {
     },
   })
 }
+
+export default api

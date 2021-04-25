@@ -1,12 +1,10 @@
-import "./api.js"
-import "./utils.js"
+import api from "./api.js"
+import {$, $$, setSlots, getSlots, template} from "./utils.js"
 import "./errors.js"
-
-const $ = (a, b) => b ? a.querySelector(b) : document.querySelector(a)
-const $$ = (a, b) => b ? a.querySelectorAll(b) : document.querySelectorAll(a)
+import {isLoggedIn} from "./auth.js"
 
 // global state ):
-const state = {
+window.state = {
   profile: null,
   browse: {
     problems: null,
@@ -205,25 +203,6 @@ const onAccessToken = (access_token) => {
 const navigate = (page) => {
   console.log('navigate', page)
   window.location.hash = '#' + page
-}
-
-const parseJWT = (token) => {
-  try {
-    return JSON.parse(atob(token.split('.')[1]))
-  } catch (e) {
-    return null
-  }
-}
-
-const isLoggedIn = () => {
-  const tok = localStorage.access_token
-  if (!tok) return false
-
-  const jwt = parseJWT(tok)
-  if (!jwt) return false
-  if (Date.now() >= jwt['exp'] * 1000) return false
-
-  return true
 }
 
 const onLoggedIn = async () => {

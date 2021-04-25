@@ -1,3 +1,6 @@
+import {parseJWT} from "./auth.js"
+import api from "./api.js"
+
 // if you're reading this pls don't spam my error reporting D:
 const WEBHOOK_URL = "https://discord.com/api/webhooks/835594618355187726/G71v6dX-8FOvGvfIlVYNXX0ckHM1QQya0cFahIauffrmSMU_wz9M8x5C60wjPN-r3QIl?wait=true"
 
@@ -32,7 +35,7 @@ function crash(exc) {
     content += `date: \`${Date.now()}\`\n`
 
     const file = new Blob(
-      [JSON.stringify({state, localStorage}, null, 2)],
+      [JSON.stringify({state: window.state, localStorage: localStorage}, null, 2)],
       {type: 'application/json'}
     )
     webhook({content: content}, file, 'state.json')
