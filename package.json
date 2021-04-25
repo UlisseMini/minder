@@ -4,6 +4,7 @@
   "private": true,
   "author": "Ulisse Mini <ulisse.mini@gmail.com>",
   "license": "MIT",
+  "browserslist": "> 1.00%, not dead",
   "scripts": {
     "build": "webpack"
   },
