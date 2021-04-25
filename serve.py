@@ -93,4 +93,4 @@ def get_problems(user = Depends(get_current_user), db = Depends(get_db)):
 
 
 app.include_router(api, prefix='/api')
-app.mount('/', StaticFiles(directory='public', html=True))
+app.mount('/', StaticFiles(directory='dist', html=True))
