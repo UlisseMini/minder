@@ -6,6 +6,8 @@ on:
       - 'dist/**'
       - 'src/**'
       - '*.py'
+      - 'webpack.config.js'
+      - 'package.json'
 
 
 jobs:
