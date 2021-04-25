@@ -2,9 +2,6 @@ from sqlalchemy import Column, String, Integer, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
 
-# NOTE: When you add problems, use relationships and foreign keys
-
-
 class User(Base):
     __tablename__ = "users"
 
