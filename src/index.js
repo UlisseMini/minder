@@ -1,3 +1,7 @@
+import "./api.js"
+import "./utils.js"
+import "./errors.js"
+
 const $ = (a, b) => b ? a.querySelector(b) : document.querySelector(a)
 const $$ = (a, b) => b ? a.querySelectorAll(b) : document.querySelectorAll(a)
 
