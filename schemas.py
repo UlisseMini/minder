@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from typing import Optional, List
 
+
 class UserBase(BaseModel):
     username: str
     class Config:
@@ -19,11 +20,13 @@ class Problem(BaseModel):
     name: str
     tex: str
 
+
 class ProblemDB(Problem):
     id: int
 
     class Config:
         orm_mode = True
+
 
 class User(UserBase):
     "This schema is returned from our api endpoints"
