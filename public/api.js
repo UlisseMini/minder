@@ -81,3 +81,11 @@ api.problems.add = async (problem) => {
   })
 }
 
+api.problems.get = async () => {
+  return await fetch(`/api/problems/get`, {
+    method: "GET",
+    headers: {
+      "Authorization": `Bearer ${localStorage.access_token}`,
+    },
+  })
+}
