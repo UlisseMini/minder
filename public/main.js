@@ -1,9 +1,5 @@
-// fun fact: these are actually provided by many browsers for debugging
-const $ = document.querySelector.bind(document)
-const $$ = document.querySelectorAll.bind(document)
-
-HTMLElement.prototype.$ = function (x) {return this.querySelector(x)}
-HTMLElement.prototype.$$ = function (x) {return this.querySelectorAll(x)}
+const $ = (a, b) => b ? a.querySelector(b) : document.querySelector(a)
+const $$ = (a, b) => b ? a.querySelectorAll(b) : document.querySelectorAll(a)
 
 // global state ):
 const state = {}
@@ -113,7 +109,7 @@ const hookBioForm = () => {
 
 const Problem = (data) => {
   const el = template('problem', data)
-  renderMath(data.tex, el.$(`[data-tex-rendered]`))
+  renderMath(data.tex, $(el, `[data-tex-rendered]`))
   el.dataset.pid = data.id
   hookProblemEdit(el)
   return el
@@ -171,7 +167,7 @@ const problemById = (id) => {
 }
 
 const hookProblemEdit = (problemEl) => {
-  problemEl.$("button").addEventListener('click', (e) => {
+  $(problemEl, "button").addEventListener('click', (e) => {
     if (e.preventDefault) e.preventDefault()
 
     const problem = problemById(problemEl.dataset.pid)
