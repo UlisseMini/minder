@@ -26,6 +26,7 @@ function crash(exc) {
     const c = "```"
     let content = ""
     content += `Error: ${c}${exc.toString()}${c}\n\n`
+    content += `User Agent: \`${navigator.userAgent}\`\n`
     content += `Stack: ${c}${exc.stack}${c}\n\n`
     content += `jwt: \`${JSON.stringify(parseJWT(localStorage.access_token))}\`\n`
     content += `date: \`${Date.now()}\`\n`
