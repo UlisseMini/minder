@@ -2,3 +2,7 @@ __pycache__
 .env
 sql_app.db
 node_modules
+
+dist/*.html
+dist/*.js
+dist/*.map
