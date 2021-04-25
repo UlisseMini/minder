@@ -85,9 +85,9 @@ def update_problems(
 
 
 @api.get("/problems/get")
-def get_problems(_ = Depends(get_current_user), db = Depends(get_db)):
+def get_problems(user = Depends(get_current_user), db = Depends(get_db)):
     "Get problems, eventually these will be taylored for the logged in user"
-    return db.query(models.Problem).all()
+    return db.query(models.Problem).filter(models.Problem.author_id != user.id).all()
 
 
 app.include_router(api, prefix='/api')
