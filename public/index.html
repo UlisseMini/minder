@@ -38,9 +38,15 @@
     </div>
   </div>
 
+  <div id="browse" class="hidden">
+    <h1>Browse</h1>
+    <div id="browse-problems">
+    </div>
+  </div>
+
   <div id="home" class="hidden">
     <p>Welcome <span slot="username"></span>!</p>
-
+    <button id="browse-button">Browse problems</button><br>
     <textarea name="bio" form="bio-form" placeholder="Edit bio" slot="bio"></textarea>
     <form id="bio-form"><input type="submit" value="Save" name="save"></form>
 
@@ -73,6 +79,12 @@
     <p slot="name"></p>
     <p data-tex-rendered=""></p>
     <button>Edit</button>
+  </div>
+
+  <div data-tmpl="problem-public">
+    <p slot="author"></p>
+    <p slot="name"></p>
+    <p data-tex-rendered=""></p>
   </div>
 </body>
 

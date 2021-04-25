@@ -2,7 +2,12 @@ const $ = (a, b) => b ? a.querySelector(b) : document.querySelector(a)
 const $$ = (a, b) => b ? a.querySelectorAll(b) : document.querySelectorAll(a)
 
 // global state ):
-const state = {}
+const state = {
+  profile: null,
+  browse: {
+    problems: null,
+  },
+}
 
 const renderMath = (tex, outputEl) => {
   const target = document.createElement("p")
@@ -254,6 +259,27 @@ const hookNewProblem = () => {
   })
 }
 
+// A problem written by somebody else, so we must display their name
+// and not the edit button, so we have a separate template for this.
+const ProblemPublic = (data) => {
+  const el = template("problem-public", data)
+  renderMath(data.tex, $(el, `[data-tex-rendered]`))
+  return el
+}
+
+const hookBrowse = () => {
+  $("#browse-button").addEventListener("click", async () => {
+    const resp = await api.problems.get()
+    await api.throwOnStatus(resp)
+
+    state.browse.problems = await resp.json()
+    const problemElements = state.browse.problems.map(ProblemPublic)
+    $("#browse-problems").replaceChildren(...problemElements)
+
+    navigate("browse")
+  })
+}
+
 const contentLoaded = () => {
   hookNavigation()
   hookLoginForm()
@@ -262,6 +288,7 @@ const contentLoaded = () => {
   hookBioForm()
   hookEditor()
   hookNewProblem()
+  hookBrowse()
 
   if (isLoggedIn()) {
     onLoggedIn()
