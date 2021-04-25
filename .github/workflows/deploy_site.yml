@@ -3,7 +3,8 @@ name: Deploy site
 on:
   push:
     paths:
-      - 'public/**'
+      - 'dist/**'
+      - 'src/**'
       - '*.py'
 
 
