@@ -16,7 +16,7 @@ import os
 
 SECRET_KEY = os.environ['SECRET_KEY']
 ALGORITHM = 'HS256'
-EXPIRES_DELTA = timedelta(minutes=15)
+EXPIRES_DELTA = timedelta(days=7)
 
 # relative url, so if our api is foo.bar/api/v1 token would be at foo.bar/api/v1/token
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="./api/login")
