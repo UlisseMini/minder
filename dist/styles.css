@@ -32,3 +32,7 @@ textarea {
   min-width: 200px;
   min-height: 100px;
 }
+
+/* https://github.com/KaTeX/KaTeX/issues/2242 */
+.katex { font-display: swap; }
+
