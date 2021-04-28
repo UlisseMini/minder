@@ -1,6 +1,7 @@
 import api from "./api.js"
 import {$, $$, setSlots, getSlots, template} from "./utils.js"
 import "./errors.js"
+import "./polyfills.js"
 import {isLoggedIn} from "./auth.js"
 
 // global state ):
